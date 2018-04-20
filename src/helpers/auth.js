@@ -1,52 +1,42 @@
-import { googleProvider, rebase } from '../config/constants';
+import { googleProvider, rebase }  from '../config/constants'
 
-// Create a user
+// using rebase to handle all authorization functions
 export function auth (email, pw) {
-    return rebase.initializedApp.auth().createUserWithEmailAndPassword (email, pw)
+  return rebase.initializedApp.auth().createUserWithEmailAndPassword(email, pw)
     .then((data) => {
-        console.log("user created data", data);
-        //call save user method
-        saveUser(data);
+      console.log("data is", data);
+      saveUser(data);
     })
 }
 
-
-// Login User with email/password
-export function login (email, pw) {
-    return rebase.initializedApp.auth().signInWIthEmailAndPassword(email, pw)
-}
-
-// login with google
-export function loginWithGoogle () {
-    return rebase.initializedApp.auth().SignInWithPopup(googleProvider)
-    .then((data) => {
-        saveUser(data.user);
-    });
-}
-
-// Logout User
 export function logout () {
-    return rebase.initializedApp.auth().signOut()
+  return rebase.initializedApp.auth().signOut()
 }
 
+export function login (email, pw) {
+  return rebase.initializedApp.auth().signInWithEmailAndPassword(email, pw)
+}
 
-// reset password
+export function loginWithGoogle () {
+  return rebase.initializedApp.auth().signInWithPopup(googleProvider)
+  .then((data) => {
+    saveUser(data.user);
+  });
+}
+
 export function resetPassword (email) {
-    return rebase.initializedApp.auth().sendPasswordResetEmail(email)
-  }
-
-// Save user to be called in create user function
+  return rebase.initializedApp.auth().sendPasswordResetEmail(email)
+}
 
 export function saveUser (user) {
-    console.log("save user", user);
-    return rebase.initializedApp.database().ref().child(`muusers/${user.uid}/info`)
-      .set({
-        email: user.email,
-        uid: user.uid
-      })
-      .then(() => {
-        
-        return user;
-      })
-  }
-  
+  console.log("save user", user);
+  return rebase.initializedApp.database().ref().child(`muusers/${user.uid}/info`)
+    .set({
+      email: user.email,
+      uid: user.uid
+    })
+    .then(() => {
+      
+      return user;
+    })
+}
