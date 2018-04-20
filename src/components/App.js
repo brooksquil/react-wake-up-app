@@ -1,17 +1,147 @@
 import React, { Component } from 'react';
+import { logout } from '../helpers/auth'
+import { Route, BrowserRouter, Link, Switch, withRouter } from 'react-router-dom'
+import { rebase } from '../config/constants'
+import {loginWithGoogle} from '../helpers/auth';
+
+import Footer from './Footer';
+import Login from './Login';
+import Register from './Register';
+import Dashboard from './Dashboard';
+import Home from './Home';
+import createBrowserHistory from 'history/createBrowserHistory'
 import './App.css';
 
+import {
+  
+  Navbar,
+  NavbarBrand,
+  Nav,
+  NavItem,
+  Container,
+  Row } from 'reactstrap';
+
 class App extends Component {
+  constructor(props){
+    super(props);
+
+    this.state = {
+      authed: false,
+      loading: true,
+      uid: null,
+    }
+
+    this.history = createBrowserHistory();
+
+    this.authenticate = this.authenticate.bind(this);
+    this.logoutApp = this.logoutApp.bind(this);
+  } 
+
+  componentDidMount () {
+    console.log("componentDidMount");
+    this.authListener = rebase.initializedApp.auth().onAuthStateChanged((user) =>{
+  
+      if (user) {
+        this.setState({
+          authed: true,
+          loading: false,
+          uid: user.uid,
+        });
+        //get DB stuff for user here
+      } else {
+        this.setState({
+          authed: false,
+          loading: false,
+          uid: null,
+        })
+      }
+    })
+  }
+  componentWillUnmount () {
+    console.log("componentWillUnmount");
+    this.authListener()
+  }
+  
+  authenticate(){
+    console.log('App: calling autheticate for google');
+    loginWithGoogle();
+  }
+
+  logoutApp(){
+    console.log('App: calling logoutApp')
+    logout();
+  }
+
+ 
+
+  
+
   render() {
+    const logout = <button onClick={this.logout}>Log Out</button>;
+
     return (
-      <div className="App">
-        <header className="App-header">
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+      <div>
+        <BrowserRouter>
+        <div>
+          <Navbar expand="sm">
+            <div className="container">
+              
+              <NavbarBrand>Music History with React, Rebase, Route, Firebase, Auth</NavbarBrand>
+              
+              <Nav>
+                <NavItem>
+                  <Link to="/" className="btn btn-primary">Home</Link>
+                </NavItem>
+
+                {this.state.authed ?
+                <NavItem>
+                  <Link to="/songs" className="btn btn-primary">Songs</Link>
+                </NavItem>
+                : null}
+                </Nav>
+
+                <Nav>
+                {this.state.authed
+                  ? <span>
+                      <div>Welcome</div>
+                      <button
+                          onClick={() => {this.logoutApp()}} className="btn btn-secondary">Logout</button>
+                          {/* <Redirect to="/songs"/> */}
+                    </span>
+                    : <span>
+                        <div>Sign in to manage your songs</div>
+                        <Link to="/login" className="btn btn-primary">Login</Link>
+                        <button onClick={() => this.authenticate('google')} 
+                          className="btn btn-primary">Login Google</button>
+                        <Link to="/register" className="btn btn-secondary">Register</Link>
+                      </span>
+                  }
+                </Nav>
+            </div>
+          </Navbar>
+
+          {this.state.authed
+          ? (<Footer />) : (null)}
+          
+          <Container>
+           
+              <Switch>
+                <Route path='/' exact component={Home} />
+                <Route authed={this.state.authed} path='/login' component={Login} />
+                <Route authed={this.state.authed} path="/register" children={props => <Register changeURL={this.changeURL} {...props} />} /> */}
+                 {/* allows passing props to components when loading */}
+                 {/* Need to fix changing of url after user registers */}
+                {this.state.authed ?
+                  <Route authed={this.state.authed} path="/dashboard" children={props => <Dashboard user={this.state.uid} {...props} />} />
+                : <Route path='/' component={Home} /> } 
+                <Route render={() => <h3>No Match</h3>} />
+              </Switch>
+           
+          </Container>
+          </div>
+        </BrowserRouter>
       </div>
+    
     );
   }
 }
